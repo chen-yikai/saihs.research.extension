@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- <fieldset> -->
+    <!--   <legend>Speech Voice</legend> -->
+    <!--   <select id="voice-select"></select> -->
+    <!-- </fieldset> -->
+    <fieldset>
+      <legend>Module</legend>
+      <select id="module-select">
+        <option value="ollama">Ollama</option>
+        <option value="mistral">Mistral</option>
+        <option value="phi">Phi</option>
+      </select>
+    </fieldset>
+    <script src="pop.js"></script>
+  </body>
+
+  <style>
+    body {
+      width: 650px;
+    }
+    * {
+      font-family: "Noto Sans", sans-serif;
+    }
+    fieldset {
+      padding: 10px 10px;
+      border: 2px solid #000;
+      border-radius: 8px;
+      padding-top: 2px;
+    }
+    select {
+      min-width: 100%;
+    }
+    legend {
+      font-weight: bold;
+      padding: 2px 4px;
+      font-size: 15px;
+      background: #fff;
+    }
+  </style>
+</html>
