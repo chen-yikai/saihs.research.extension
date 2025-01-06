@@ -4,26 +4,20 @@ function FilterHTML(htmlContent) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(htmlContent, "text/html");
 
-  function removeTags(tags) {
-    tags.forEach((tag) => {
-      const elements = doc.querySelectorAll(tag);
-      elements.forEach((element) => {
-        if (tag === "head" && element.querySelector("title")) {
-          const title = element.querySelector("title");
-          element.innerHTML = "";
-          element.appendChild(title);
-        } else {
-          element.remove();
-        }
-      });
-    });
-  }
-
   const tagsToRemove = ["style", "script", "head"];
-  removeTags(tagsToRemove);
+  tagsToRemove.forEach((tag) => {
+    doc.querySelectorAll(tag).forEach((element) => {
+      if (tag === "head" && element.querySelector("title")) {
+        const title = element.querySelector("title");
+        element.innerHTML = "";
+        element.appendChild(title);
+      } else {
+        element.remove();
+      }
+    });
+  });
 
-  const imgTags = doc.querySelectorAll("img");
-  imgTags.forEach((img) => {
+  doc.querySelectorAll("img").forEach((img) => {
     Array.from(img.attributes).forEach((attr) => {
       if (!["title", "alt", "aria-label"].includes(attr.name)) {
         img.removeAttribute(attr.name);
@@ -31,106 +25,99 @@ function FilterHTML(htmlContent) {
     });
   });
 
-  const filteredContent = doc.documentElement.innerHTML
-    .replace(/\s+/g, " ")
-    .trim();
-
-  return filteredContent;
+  return doc.documentElement.innerHTML.replace(/\s+/g, " ").trim();
 }
 
 function Toaster(content, error = false) {
   const box = document.createElement("div");
   box.id = ToasterBoxId;
   box.innerText = content;
-  box.style.color = "white";
-  box.style.fontWeight = "bold";
-  box.style.padding = "15px";
-  box.style.position = "fixed";
-  box.style.top = "10px";
-  box.style.right = "10px";
-  box.style.zIndex = "9999";
-  box.style.borderRadius = "5px";
-  box.style.fontSize = "20px";
-  box.style.backgroundColor = error ? "red" : "green";
+  box.style = `
+    color: white;
+    font-weight: bold;
+    padding: 15px;
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 9999;
+    border-radius: 5px;
+    font-size: 20px;
+    background-color: ${error ? "red" : "green"};
+  `;
 
   document.body.appendChild(box);
 
-  setTimeout(() => {
-    box.remove();
-  }, 3000);
+  setTimeout(() => box.remove(), 3000);
 }
 
-async function Poster(payload) {
+async function Poster(payload, endpoint) {
   try {
-    const response = await fetch("http://localhost:3000/api", {
+    const response = await fetch(endpoint, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
     if (!response.ok) {
       throw new Error(`${response.status}`);
     }
-
-    const result = await response.json();
-    return result;
+    return await response.json();
   } catch (error) {
     throw new Error(`${error.message}`);
   }
 }
 
 function Speaker(text) {
-  function speakText(voice) {
+  const speakText = (voice) => {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "zh-TW";
     utterance.voice = voice;
     speechSynthesis.cancel();
     speechSynthesis.speak(utterance);
-  }
+  };
 
-  function getVoice() {
+  const getVoice = () => {
     const voices = speechSynthesis.getVoices();
     const chineseVoice = voices.find((voice) => voice.lang === "zh-TW");
-
     if (chineseVoice) {
       speakText(chineseVoice);
     }
-  }
+  };
 
   if (
     typeof speechSynthesis !== "undefined" &&
     speechSynthesis.onvoiceschanged !== undefined
   ) {
-    speechSynthesis.onvoiceschanged = () => {
-      getVoice();
-    };
+    speechSynthesis.onvoiceschanged = getVoice;
   }
   getVoice();
 }
 
-function Entry() {
+async function Entry() {
   const htmlContent = document.documentElement.innerHTML;
   const filteredHtml = FilterHTML(htmlContent);
-  var module = "ollama";
-  chrome.storage.local.get(["module"], (result) => {
+
+  let module = "ollama";
+  let endpoint = "";
+
+  chrome.storage.local.get(["module", "endpoint"], (result) => {
     if (result.module) {
       module = result.module;
     }
-  });
-  const payload = {
-    module: module,
-    content: filteredHtml,
-  };
+    if (result.endpoint) {
+      endpoint = result.endpoint;
+    }
 
-  Poster(payload)
-    .then((response) => {
-      Toaster("Content summarised successfully");
-      Speaker(response.response);
-    })
-    .catch((error) => {
-      Toaster(`Something went wrong - ${error.message}`, true);
-    });
+    const payload = { module, content: filteredHtml };
+
+    Poster(payload, endpoint)
+      .then((response) => {
+        Toaster("Content summarised successfully");
+        Speaker(response.response);
+      })
+      .catch((error) => {
+        Toaster(`Something went wrong - ${error.message}`, true);
+      });
+  });
 }
 
 document.addEventListener("keydown", (event) => {

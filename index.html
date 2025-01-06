@@ -12,10 +12,10 @@
     />
   </head>
   <body>
-    <!-- <fieldset> -->
-    <!--   <legend>Speech Voice</legend> -->
-    <!--   <select id="voice-select"></select> -->
-    <!-- </fieldset> -->
+    <fieldset>
+      <legend>API Endpoint</legend>
+      <input type="text" id="endpoint" />
+    </fieldset>
     <fieldset>
       <legend>Module</legend>
       <select id="module-select">
@@ -26,13 +26,14 @@
     </fieldset>
     <script src="pop.js"></script>
   </body>
-
   <style>
     body {
       width: 650px;
+      background: #ffffff;
     }
     * {
       font-family: "Noto Sans", sans-serif;
+      box-sizing: border-box;
     }
     fieldset {
       padding: 10px 10px;
@@ -40,8 +41,15 @@
       border-radius: 8px;
       padding-top: 2px;
     }
+    input,
     select {
-      min-width: 100%;
+      border-radius: 10px;
+      padding: 5px 10px;
+      border: 2px solid #97ffb5;
+      background: #97ffb5;
+      width: 100%;
+      font-size: 16px;
+      font-weight: bold;
     }
     legend {
       font-weight: bold;
