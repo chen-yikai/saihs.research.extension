@@ -1,4 +1,5 @@
 const ToasterBoxId = Math.random().toString(16);
+let loading = true;
 
 function FilterHTML(htmlContent) {
   const parser = new DOMParser();
@@ -28,7 +29,7 @@ function FilterHTML(htmlContent) {
   return doc.documentElement.innerHTML.replace(/\s+/g, " ").trim();
 }
 
-function Toaster(content, error = false) {
+function Toaster(content, error = false, load = false) {
   const box = document.createElement("div");
   box.id = ToasterBoxId;
   box.innerText = content;
@@ -46,8 +47,9 @@ function Toaster(content, error = false) {
   `;
 
   document.body.appendChild(box);
-
-  setTimeout(() => box.remove(), 3000);
+  if (!load) {
+    setTimeout(() => box.remove(), 3000);
+  }
 }
 
 async function Poster(payload, endpoint) {
@@ -60,6 +62,7 @@ async function Poster(payload, endpoint) {
     if (!response.ok) {
       throw new Error(`${response.status}`);
     }
+
     return await response.json();
   } catch (error) {
     throw new Error(`${error.message}`);
@@ -96,7 +99,7 @@ async function Entry() {
   const htmlContent = document.documentElement.innerHTML;
   const filteredHtml = FilterHTML(htmlContent);
 
-  let module = "ollama";
+  let module = "llama2";
   let endpoint = "";
 
   chrome.storage.local.get(["module", "endpoint"], (result) => {
@@ -107,17 +110,24 @@ async function Entry() {
       endpoint = result.endpoint;
     }
 
-    const payload = { module, content: filteredHtml };
-
+    const payload = { module: module, content: filteredHtml };
+    Toaster("Summarising content...", false, true);
     Poster(payload, endpoint)
       .then((response) => {
+        removeToaster();
         Toaster("Content summarised successfully");
+        console.log(response);
         Speaker(response.response);
       })
       .catch((error) => {
+        removeToaster();
         Toaster(`Something went wrong - ${error.message}`, true);
       });
   });
+}
+
+function removeToaster() {
+  document.getElementById(ToasterBoxId).remove();
 }
 
 document.addEventListener("keydown", (event) => {
